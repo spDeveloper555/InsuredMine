@@ -35,15 +35,18 @@ The server will run on http://localhost:3000
 
 - Task 1: List API:
 
-Method - POST
-URL - http://localhost:3000/api/task/list
-Body - 
+Method:- POST
+
+URL:- http://localhost:3000/api/task/list
+
+Body:- 
 {
     "search": "",  // Optional  //Search only username
     "page": 1,  // Optional  
     "limit": 20  // Optional
 }
-Response - 
+
+Response:- 
 {
     "status": "success",
     "page": 1,
@@ -56,15 +59,18 @@ Response -
 
 - Task 2: Schedule API:
 
-Method - POST
-URL - http://localhost:3000/api/task/schedule
-Body - 
+Method:- POST
+
+URL:- http://localhost:3000/api/task/schedule
+
+Body:- 
 {
     "message": "Run backup",  //Required
     "day": "Thursday",  //Required
     "time": "00:36"  //Required
 }
-Response - 
+
+Response:- 
 {
     "status": "success",
     "message": "Message scheduled successfully"
