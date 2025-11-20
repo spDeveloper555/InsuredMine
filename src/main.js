@@ -75,7 +75,7 @@ class Main {
     }
 
     async routerInitialization() {
-        if (!fs.existsSync(path.join(__dirname + './assets/uploads'))) {
+        if (!fs.existsSync(path.join(__dirname, './assets/uploads'))) {
             fs.mkdirSync(path.join(__dirname, './assets/uploads'));
         }
         this.initializeMiddlewares();
