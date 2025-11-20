@@ -73,7 +73,7 @@ Response:-
 
 ### Task 2:
 
--Schedule API:
+- Schedule API:
 
 Method:- POST
 
