@@ -33,9 +33,9 @@ The server will run on http://localhost:3000
 
 ### API Testing (Postman)
 
-- Task 1: List API:
+### Task 1:
 
-- Worker
+- Upload worker API:
 
 Method - POST
 URL - http://localhost:3000/api/task/upload
@@ -48,6 +48,8 @@ Response -
     "success": "success",
     "message": "File processed successfully"
 }
+
+- List API:
 
 Method - POST
 URL - http://localhost:3000/api/task/list
@@ -69,7 +71,9 @@ Response:-
 }
 
 
-- Task 2: Schedule API:
+### Task 2:
+
+-Schedule API:
 
 Method:- POST
 
