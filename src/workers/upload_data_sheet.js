@@ -1,18 +1,41 @@
 const XLSX = require("xlsx");
 const fs = require("fs");
 const { parse } = require("csv-parse");
-const path = require("path");
+const { workerData, parentPort } = require("worker_threads");
 
-async function start_store_data(scope, filePathInput) {
+const UtilityService = require('./../services/utility.service');
+const MongoDriver = require('./../core/drivers/mongo');
+require('dotenv').config();
+
+(async () => {
     try {
-        const defaultPath = path.join(__dirname, './../assets/data_sheets/data-sheet.csv');
-        const filePath = filePathInput || defaultPath;
+        const { filePath, filename } = workerData;
+        const utility = new UtilityService();
+        const mongo = new MongoDriver();
+
+        const scope = {
+            db: mongo,
+            utility: utility
+        };
+
+        const result = await start_store_data(scope, filePath, filename);
+        setTimeout(() => {
+            try { fs.unlinkSync(filePath); } catch (e) { console.error(e); }
+        }, 200);
+
+        parentPort.postMessage({ inserted: result.insertedCount });
+
+    } catch (err) {
+        parentPort.postMessage({ error: err.message });
+    }
+})();
+async function start_store_data(scope, filePath, filename) {
+    try {
 
         if (!fs.existsSync(filePath)) throw new Error(`File not found: ${filePath}`);
 
-        const ext = path.extname(filePath).toLowerCase();
 
-        if (ext === ".csv") {
+        if (filename.endsWith(".csv")) {
             const CHUNK_SIZE = 1000;
             const parser = fs.createReadStream(filePath).pipe(parse({ columns: true, skip_empty_lines: true, trim: true }));
             let chunk = [];
@@ -32,7 +55,7 @@ async function start_store_data(scope, filePathInput) {
             return true;
         }
 
-        if (ext === ".xlsx" || ext === ".xls" || ext === ".xlsm") {
+        if (filename.endsWith(".xlsx") || filename.endsWith(".xls") || filename.endsWith(".xlsm")) {
             const rows = await processExcel(filePath);
             const CHUNK_SIZE = 1000;
             for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
@@ -42,7 +65,7 @@ async function start_store_data(scope, filePathInput) {
             return true;
         }
 
-        throw new Error(`Unsupported file extension: ${ext}`);
+        throw new Error(`Unsupported file extension for file: ${filename}`);
     } catch (error) {
         console.error(error);
         throw error;
@@ -78,12 +101,12 @@ async function store_data_in_db(scope, datas) {
             existingPolicies,
             existingAccounts,
         ] = await Promise.all([
-            scope.db.findAll({ email: { $in: [...emailSet] }, status: 1 }, 'users', {projection: { email: 1, _id: 0 }}),
-            scope.db.findAll({ agent_name: { $in: [...agentSet] }, status: 1 }, 'policy_agents', {projection: { agent_name: 1, _id: 0 }}),
-            scope.db.findAll({ category_name: { $in: [...categorySet] }, status: 1 }, 'policy_categories', {projection: { category_name: 1, _id: 0 }}),
-            scope.db.findAll({ carrier_name: { $in: [...carrierSet] }, status: 1 }, 'policy_carriers', {projection: { carrier_name: 1, _id: 0 }}),
-            scope.db.findAll({ policy_number: { $in: [...policySet] }, status: 1 }, 'policies', {projection: { policy_number: 1, _id: 0 }}),
-            scope.db.findAll({ account_name: { $in: [...accountKeySet] }, status: 1 }, 'accounts', {projection: { account_name: 1, account_type: 1, _id: 0 }}),
+            scope.db.findAll({ email: { $in: [...emailSet] }, status: 1 }, 'users', { projection: { email: 1, _id: 0 } }),
+            scope.db.findAll({ agent_name: { $in: [...agentSet] }, status: 1 }, 'policy_agents', { projection: { agent_name: 1, _id: 0 } }),
+            scope.db.findAll({ category_name: { $in: [...categorySet] }, status: 1 }, 'policy_categories', { projection: { category_name: 1, _id: 0 } }),
+            scope.db.findAll({ carrier_name: { $in: [...carrierSet] }, status: 1 }, 'policy_carriers', { projection: { carrier_name: 1, _id: 0 } }),
+            scope.db.findAll({ policy_number: { $in: [...policySet] }, status: 1 }, 'policies', { projection: { policy_number: 1, _id: 0 } }),
+            scope.db.findAll({ account_name: { $in: [...accountKeySet] }, status: 1 }, 'accounts', { projection: { account_name: 1, account_type: 1, _id: 0 } }),
         ]);
 
         const existingEmailSet = new Set(existingUsers.map(x => x.email));
@@ -272,5 +295,3 @@ async function processExcel(filePath) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     return XLSX.utils.sheet_to_json(sheet, { defval: null });
 }
-
-module.exports = start_store_data;

@@ -35,11 +35,23 @@ The server will run on http://localhost:3000
 
 - Task 1: List API:
 
-Method:- POST
+- Worker
 
-URL:- http://localhost:3000/api/task/list
+Method - POST
+URL - http://localhost:3000/api/task/upload
+Body - 
+{
+    files: "excel"  // Form data
+}
+Response - 
+{
+    "success": "success",
+    "message": "File processed successfully"
+}
 
-Body:- 
+Method - POST
+URL - http://localhost:3000/api/task/list
+Body - 
 {
     "search": "",  // Optional  //Search only username
     "page": 1,  // Optional  

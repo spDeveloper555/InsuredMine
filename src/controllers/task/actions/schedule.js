@@ -14,7 +14,7 @@ const schedule = async (scope) => {
 
         scope.res.status(200).json({ status: "success", message: "Message scheduled successfully" });
     } catch (err) {
-        scope.res.status(500).json({ status: "failure", error: err.message });
+        scope.res.status(500).json({ status: "failure", error: err.message || "Unable to schedule message." });
     }
 };
 

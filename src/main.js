@@ -4,12 +4,13 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const { MemoryStore } = require('express-rate-limit');
 const requestIp = require('request-ip');
+const multer = require('multer');
+const path = require('path');
 require('dotenv').config();
 
 const UtilityService = require('./services/utility.service');
 const MongoDriver = require('./core/drivers/mongo');
 const genericRouter = require('./routes/genericRouter');
-const start_store_data = require('./workers/upload_data_sheet');
 const cronScheduler = require('./cron/cronScheduler');
 
 const app = express();
@@ -97,7 +98,6 @@ class Main {
             db: this.mongo,
             utility: this.utility,
         };
-        start_store_data(scopeObj);
         new cronScheduler(scopeObj);
     }
     initializeMiddlewares() {
@@ -168,6 +168,18 @@ class Main {
             }
         };
 
+        const storage = multer.diskStorage({
+            destination: (req, file, cb) => {
+
+                cb(null, path.join(__dirname, './assets/uploads') )
+            },
+            filename: (req, file, cb) => {
+                cb(null, file.originalname)
+            }
+        });
+
+        const upload = multer({ storage: storage });
+
         const method = String(item.type || '').toLowerCase();
         const middlewares = Array.isArray(item.middlewares) ? item.middlewares : [];
 
@@ -176,7 +188,7 @@ class Main {
                 this.router.get(routerPath, ...middlewares, controllerAction);
                 break;
             case 'post':
-                this.router.post(routerPath, ...middlewares, controllerAction);
+                this.router.post(routerPath, upload.array("files"), ...middlewares, controllerAction);
                 break;
             case 'put':
                 this.router.put(routerPath, ...middlewares, controllerAction);
