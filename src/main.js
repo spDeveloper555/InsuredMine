@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const { MemoryStore } = require('express-rate-limit');
 const requestIp = require('request-ip');
 const multer = require('multer');
+const fs = require("fs");
 const path = require('path');
 require('dotenv').config();
 
@@ -74,6 +75,9 @@ class Main {
     }
 
     async routerInitialization() {
+        if (!fs.existsSync(path.join(__dirname + './assets/uploads'))) {
+            fs.mkdirSync(path.join(__dirname, './assets/uploads'));
+        }
         this.initializeMiddlewares();
         this.initWorkers();
         this.routerRecursive(genericRouter);
